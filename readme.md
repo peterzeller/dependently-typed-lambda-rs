@@ -10,4 +10,4 @@ This project was built with [Rust](https://www.rust-lang.org/tools/install) vers
 ## Build
 
     cargo run
-
+    cargo test

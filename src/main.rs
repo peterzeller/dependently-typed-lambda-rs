@@ -23,7 +23,7 @@ fn main() {
                 match ast {
                     Err(e) => println!("Could not parse: {}", e),
                     Ok(ast) => {
-                        let v = eval(ast);
+                        let v = eval(&ast);
                         println!("value = {:#?}", v)
                     }
                 }

@@ -2,7 +2,7 @@ use std::rc::Rc;
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum Type {
-    Base,
+    TFree(Name),
     Function {
         arg_type: Rc<Type>,
         res_type: Rc<Type>,
@@ -10,21 +10,36 @@ pub enum Type {
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]
-pub enum Expr {
-    Annotated { expr: Rc<Expr>, typ: Rc<Type> },
-    Var { name: String },
-    App { func: Rc<Expr>, arg: Rc<Expr> },
-    Lambda { var_name: String, body: Rc<Expr> },
+pub enum InferableTerm {
+    Annotated {
+        expr: Rc<CheckableTerm>,
+        typ: Rc<Type>,
+    },
+    Bound {
+        index: i32,
+    },
+    Free {
+        name: Name,
+    },
+    App {
+        func: Rc<InferableTerm>,
+        arg: Rc<CheckableTerm>,
+    },
+    // TODO add Lambda with explicitly typed parameter
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]
-pub enum Value {
-    Neutral(Neutral),
-    Lambda { var_name: String, body: Rc<Value> },
+pub enum CheckableTerm {
+    Inf(Rc<InferableTerm>),
+    Lambda {
+        var_name: String,
+        body: Rc<CheckableTerm>,
+    },
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]
-pub enum Neutral {
-    Var { name: String },
-    App { func: Rc<Neutral>, arg: Rc<Value> },
+pub enum Name {
+    Global(String),
+    Local(i32),
+    Quote(i32),
 }
