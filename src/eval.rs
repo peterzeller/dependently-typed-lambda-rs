@@ -20,6 +20,12 @@ pub enum Env {
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum Value {
     Neutral(Rc<Neutral>),
+    Star,
+    PiClosure {
+        param: Rc<Value>,
+        env: Rc<Env>,
+        body: Rc<CheckableTerm>,
+    },
     Closure {
         env: Rc<Env>,
         body: Rc<CheckableTerm>,
@@ -64,6 +70,16 @@ fn eval_it(e: &InferableTerm, env: &Rc<Env>) -> Rc<Value> {
             let ae = eval_ct(a, env);
             vapp(&fe, &ae)
         }
+        Star => Rc::new(Value::Star),
+        Pi {
+            var_name: _,
+            arg_type: a,
+            result_type: r,
+        } => Rc::new(Value::PiClosure {
+            param: eval_ct(a, env),
+            env: Rc::clone(env),
+            body: Rc::clone(r),
+        }),
     }
 }
 
@@ -76,6 +92,16 @@ fn vapp(f: &Value, a: &Rc<Value>) -> Rc<Value> {
             func: Rc::clone(n),
             arg: a.clone(),
         }))),
+        Value::Star => {
+            panic!("cannot call * as a function")
+        }
+        Value::PiClosure {
+            param: _,
+            env: _,
+            body: _,
+        } => {
+            panic!("cannot call pi as a function")
+        }
     }
 }
 

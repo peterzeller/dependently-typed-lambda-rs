@@ -1,5 +1,4 @@
 use crate::abstract_syntax::Name::Global;
-use crate::abstract_syntax::Type;
 use crate::abstract_syntax::{CheckableTerm, InferableTerm};
 use crate::parser::InferableTerm::Bound;
 use crate::parser::InferableTerm::Free;
@@ -54,7 +53,7 @@ fn transform_ast(input: pest::iterators::Pairs<Rule>) -> Vec<Rc<InferableTerm>> 
 
 fn transform_it(p: pest::iterators::Pair<Rule>, env: &Rc<Env>) -> Rc<InferableTerm> {
     match p.as_rule() {
-        Rule::start | Rule::expr | Rule::expr2 | Rule::expr3 | Rule::expr4 => {
+        Rule::start | Rule::expr | Rule::exprLambda | Rule::exprArrow | Rule::exprAnnotated | Rule::exprApp | Rule::exprAtomic => {
             transform_it(p.into_inner().next().unwrap(), env)
         }
         Rule::parenExpr => transform_it(p.into_inner().next().unwrap(), env),
@@ -75,7 +74,15 @@ fn transform_it(p: pest::iterators::Pair<Rule>, env: &Rc<Env>) -> Rc<InferableTe
             let mut inner = p.into_inner();
             Rc::new(InferableTerm::Annotated {
                 expr: transform_ct(inner.next().unwrap(), env),
-                typ: transform_type(inner.next().unwrap()),
+                typ: transform_ct(inner.next().unwrap(), env),
+            })
+        }
+        Rule::arrow => {
+            let mut inner = p.into_inner();
+            Rc::new(InferableTerm::Pi {
+                var_name: String::from("_"),
+                arg_type: transform_ct(inner.next().unwrap(), env),
+                result_type: transform_ct(inner.next().unwrap(), env),
             })
         }
         x => panic!("TODO {:#?}", x),
@@ -85,7 +92,7 @@ fn transform_it(p: pest::iterators::Pair<Rule>, env: &Rc<Env>) -> Rc<InferableTe
 
 fn transform_ct(p: pest::iterators::Pair<Rule>, env: &Rc<Env>) -> Rc<CheckableTerm> {
     match p.as_rule() {
-        Rule::start | Rule::expr | Rule::expr2 | Rule::expr3 | Rule::expr4 => {
+        Rule::start | Rule::expr | Rule::exprLambda | Rule::exprArrow | Rule::exprAnnotated | Rule::exprApp | Rule::exprAtomic => {
             transform_ct(p.into_inner().next().unwrap(), env)
         }
         Rule::parenExpr => transform_ct(p.into_inner().next().unwrap(), env),
@@ -109,23 +116,6 @@ fn transform_ct(p: pest::iterators::Pair<Rule>, env: &Rc<Env>) -> Rc<CheckableTe
     }
 }
 
-fn transform_type(p: pest::iterators::Pair<Rule>) -> Rc<Type> {
-    match p.as_rule() {
-        Rule::typ | Rule::typ2 | Rule::paren_type => transform_type(p.into_inner().next().unwrap()),
-        Rule::function_type => {
-            let mut inner = p.into_inner();
-            Rc::new(Type::Function {
-                arg_type: transform_type(inner.next().unwrap()),
-                res_type: transform_type(inner.next().unwrap()),
-            })
-        }
-        Rule::base_type => {
-            let x = String::from(p.as_str());
-            Rc::new(Type::TFree(Global(x)))
-        }
-        x => panic!("TODO {:#?}", x),
-    }
-}
 
 // enum Tok {
 //     Eof,

@@ -25,7 +25,7 @@ fn test_eval(input: &str, expected: Value) {
 #[test]
 fn test_annotated() {
     test_eval(
-        "((%x. x): 'a -> ('a)) y",
+        "((λx. x): a -> a) y",
         Neutral(Rc::new(Free {
             name: Name::Global(String::from("y")),
         })),

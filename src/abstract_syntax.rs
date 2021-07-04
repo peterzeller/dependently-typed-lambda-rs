@@ -1,20 +1,13 @@
 use std::rc::Rc;
 
 #[derive(Clone, Debug, Eq, PartialEq)]
-pub enum Type {
-    TFree(Name),
-    Function {
-        arg_type: Rc<Type>,
-        res_type: Rc<Type>,
-    },
-}
-
-#[derive(Clone, Debug, Eq, PartialEq)]
 pub enum InferableTerm {
     Annotated {
         expr: Rc<CheckableTerm>,
-        typ: Rc<Type>,
+        typ: Rc<CheckableTerm>,
     },
+    Star,
+    Pi { var_name: String, arg_type: Rc<CheckableTerm>, result_type: Rc<CheckableTerm> },
     Bound {
         index: i32,
     },

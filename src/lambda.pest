@@ -8,27 +8,26 @@ ident = @{ (alpha | digit)+ }
 
 start = { SOI ~ expr ~ EOI }
 
-expr = { lambda | expr2 }
-expr2 = { annotated | expr3 }
-expr3 = { app | expr4 }
-expr4 = { var | parenExpr }
+expr = { pi | exprLambda }
+exprLambda = { lambda | exprArrow }
+exprArrow = { arrow | exprAnnotated }
+exprAnnotated = { annotated | exprApp }
+exprApp = { app | exprAtomic }
+exprAtomic = { var | star | parenExpr }
 
 parenExpr = {"(" ~ expr ~ ")"}
 
-lambda = {"%" ~ ident ~ "." ~ expr}
+lambda = {("lambda"|"\\"|"λ") ~ ident ~ "." ~ expr}
 
-app = {expr4 ~ expr}
+pi = {("forall"|"∀") ~ ident ~ ":" ~ expr ~ "." ~ expr}
+
+app = {exprAtomic ~ expr}
 
 var = {ident}
 
-annotated = {expr3 ~ ":" ~ typ}
+annotated = {exprApp ~ ":" ~ expr}
 
-typ = { function_type | typ2 }
-typ2 = { base_type | paren_type }
-paren_type = {"(" ~ typ ~ ")"}
+arrow = {exprAnnotated ~ "->" ~ exprArrow}
 
-
-base_type = {"'a"}
-function_type = {typ2 ~ "->" ~ typ}
-
+star = { "*" }
 
